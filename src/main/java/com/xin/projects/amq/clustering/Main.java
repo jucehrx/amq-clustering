@@ -3,6 +3,7 @@ package com.xin.projects.amq.clustering;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.net.URL;
 import java.util.Properties;
@@ -20,9 +21,10 @@ public class Main {
         String localName;
         String localUrl;
         try {
-            URL prop = Thread.currentThread().getContextClassLoader().getResource(zkconfigUrl);
+//            URL prop = Thread.currentThread().getContextClassLoader().getResource(zkconfigUrl);
             Properties properties = new Properties();
-            properties.load(new FileInputStream(prop.getFile()));
+//            properties.load(new FileInputStream(prop.getFile()));
+            properties.load(new FileInputStream(new File(zkconfigUrl)));
             zkconn = properties.getProperty("zk.conn");
             znode = properties.getProperty("zk.node");
             localName = properties.getProperty("amq.name");

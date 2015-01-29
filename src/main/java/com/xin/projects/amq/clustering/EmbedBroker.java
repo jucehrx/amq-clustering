@@ -1,6 +1,5 @@
 package com.xin.projects.amq.clustering;
 
-import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.network.DemandForwardingBridge;

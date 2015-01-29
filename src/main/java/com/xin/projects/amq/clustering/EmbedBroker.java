@@ -1,5 +1,6 @@
 package com.xin.projects.amq.clustering;
 
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.network.DemandForwardingBridge;
@@ -80,6 +81,7 @@ public class EmbedBroker implements PoolHandler.PoolListener {
             for (Map.Entry<String, NetworkBridge> entry : bridges.entrySet()) {
                 entry.getValue().stop();
                 System.out.println("stop: " + localUrl + "----" + entry.getValue());
+
             }
             bridges = temp;
         } catch (Exception e) {
@@ -118,5 +120,6 @@ public class EmbedBroker implements PoolHandler.PoolListener {
     public void setBroker(BrokerService broker) {
         this.broker = broker;
     }
+
 
 }

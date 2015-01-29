@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.Properties;
 
+
 /**
  * Created by xin on 2015/1/26.
  */
@@ -40,5 +41,6 @@ public class Main {
         EmbedBroker embedBroker = new EmbedBroker(localName, localUrl);
         embedBroker.setup();
         new PoolHandler(zkconn, znode, localName, localUrl, embedBroker);
+
     }
 }

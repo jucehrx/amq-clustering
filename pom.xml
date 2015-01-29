@@ -7,6 +7,7 @@
     <groupId>com.xin.projects</groupId>
     <artifactId>amq-clustering</artifactId>
     <version>1.0-SNAPSHOT</version>
+<<<<<<< HEAD
     <build>
         <plugins>
             <plugin>
@@ -29,11 +30,16 @@
         <activemq-version>5.10.0</activemq-version>
         <junit-version>4.11</junit-version>
         <zookeeper-version>3.5.0-alpha</zookeeper-version>
+=======
+    <properties>
+        <slf4j-version>1.7.10</slf4j-version>
+>>>>>>> 73ca7b8138656444271da332bb1f3db575f9e7ab
     </properties>
     <dependencies>
         <dependency>
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-all</artifactId>
+<<<<<<< HEAD
             <version>${activemq-version}</version>
             <scope>compile</scope>
             <exclusions>
@@ -42,23 +48,40 @@
                     <artifactId>slf4j-log4j12</artifactId>
                 </exclusion>
             </exclusions>
+=======
+            <version>5.10.0</version>
+>>>>>>> 73ca7b8138656444271da332bb1f3db575f9e7ab
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+<<<<<<< HEAD
             <version>${junit-version}</version>
             <scope>compile</scope>
+=======
+            <version>4.11</version>
+>>>>>>> 73ca7b8138656444271da332bb1f3db575f9e7ab
         </dependency>
         <dependency>
             <groupId>org.apache.zookeeper</groupId>
             <artifactId>zookeeper</artifactId>
+<<<<<<< HEAD
             <version>${zookeeper-version}</version>
             <scope>compile</scope>
+=======
+            <version>3.5.0-alpha</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>1.1.41</version>
+>>>>>>> 73ca7b8138656444271da332bb1f3db575f9e7ab
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>${slf4j-version}</version>
+<<<<<<< HEAD
             <scope>compile</scope>
         </dependency>
         <!--<dependency>-->
@@ -67,6 +90,14 @@
         <!--<version>${slf4j-version}</version>-->
         <!--<scope>compile</scope>-->
         <!--</dependency>-->
+=======
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${slf4j-version}</version>
+        </dependency>
+>>>>>>> 73ca7b8138656444271da332bb1f3db575f9e7ab
     </dependencies>
 
 </project>

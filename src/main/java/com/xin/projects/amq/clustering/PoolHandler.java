@@ -10,12 +10,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
 /**
  * Created by xin on 2015/1/26.
  */
 public class PoolHandler extends Thread implements Watcher, AsyncCallback.Children2Callback, AsyncCallback.StatCallback {
-    private static final Logger logger = LoggerFactory.getLogger(PoolHandler.class);
 
+    private static final Logger logger = LoggerFactory.getLogger(PoolHandler.class);
     private final static String DefaultZkconn = "127.0.0.1:2181";
     private final static String DefaultZnode = "/amq-clustering";
     private String zkconn;
@@ -37,6 +38,7 @@ public class PoolHandler extends Thread implements Watcher, AsyncCallback.Childr
         this.localUrl = brokerUrl;
         this.zkconn = conn;
         this.znode = node;
+
         zk = new ZooKeeper(zkconn, 3000, this);
         zk.exists(znode, true, this, znode);
         start();

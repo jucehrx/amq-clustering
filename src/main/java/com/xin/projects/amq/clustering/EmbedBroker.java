@@ -80,7 +80,7 @@ public class EmbedBroker implements PoolHandler.PoolListener {
             }
             for (Map.Entry<String, NetworkBridge> entry : bridges.entrySet()) {
                 entry.getValue().stop();
-                System.out.println("stop: "+localUrl + "----" + entry.getValue());
+                System.out.println("stop: " + localUrl + "----" + entry.getValue());
             }
             bridges = temp;
         } catch (Exception e) {
@@ -90,20 +90,6 @@ public class EmbedBroker implements PoolHandler.PoolListener {
 
     }
 
-    public BrokerService getBroker() {
-        return broker;
-    }
-
-    public void setBroker(BrokerService broker) {
-        this.broker = broker;
-    }
-
-    private void createBridge() {
-
-    }
-
-    private void removeBridge() {
-    }
 
     protected Transport createTransport(String url) throws Exception {
         Transport transport = TransportFactory.connect(new URI(url));
@@ -114,7 +100,7 @@ public class EmbedBroker implements PoolHandler.PoolListener {
         DemandForwardingBridge bridge;
         NetworkBridgeConfiguration config = new NetworkBridgeConfiguration();
         config.setBrokerName(broker.getBrokerName());
-        config.setDispatchAsync(false);
+        config.setDispatchAsync(true);
         config.setDuplex(true);
 
         Transport localTransport = createTransport(localUrlurl);
@@ -124,6 +110,14 @@ public class EmbedBroker implements PoolHandler.PoolListener {
         bridge = NetworkBridgeFactory.createBridge(config, localTransport, remoteTransport);
         bridge.setBrokerService(broker);
         return bridge;
+    }
+
+    public BrokerService getBroker() {
+        return broker;
+    }
+
+    public void setBroker(BrokerService broker) {
+        this.broker = broker;
     }
 
 }

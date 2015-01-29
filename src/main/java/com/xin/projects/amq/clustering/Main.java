@@ -1,21 +1,43 @@
 package com.xin.projects.amq.clustering;
 
-import org.apache.activemq.broker.Broker;
-import org.apache.activemq.broker.BrokerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.FileInputStream;
+import java.net.URL;
+import java.util.Properties;
 
 /**
  * Created by xin on 2015/1/26.
  */
 public class Main {
-    static String localName = "broker1";
-    static String localUrl = "tcp://172.24.127.2:61616";
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
+    private final static String zkconfigUrl = "conf/zkconfig.properties";
 
     public static void main(String args[]) throws Exception {
+        String zkconn;
+        String znode;
+        String localName;
+        String localUrl;
+        try {
+            URL prop = Thread.currentThread().getContextClassLoader().getResource(zkconfigUrl);
+            Properties properties = new Properties();
+            properties.load(new FileInputStream(prop.getFile()));
+            zkconn = properties.getProperty("zk.conn");
+            znode = properties.getProperty("zk.node");
+            localName = properties.getProperty("amq.name");
+            localUrl = properties.getProperty("amq.url");
+        } catch (Exception e) {
+            logger.error(zkconfigUrl + " file load error!", e);
+            throw e;
+        }
+        if (zkconn == null || znode == null || localName == null || localUrl == null) {
+            String message = "Error ! Param cant be null! : zk.conn=" + zkconn + " zk.node=" + znode + " amq.name=" + localName + " amq.url=" + localUrl;
+            System.out.println(message);
+            throw new Exception(message);
+        }
         EmbedBroker embedBroker = new EmbedBroker(localName, localUrl);
         embedBroker.setup();
-        String localName = embedBroker.getBroker().getBrokerName();
-        String localUrl = embedBroker.getBroker().getDefaultSocketURIString();
-
-        new PoolHandler(localName, localUrl, embedBroker);
+        new PoolHandler(zkconn, znode, localName, localUrl, embedBroker);
     }
 }

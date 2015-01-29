@@ -6,19 +6,16 @@ import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileInputStream;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 /**
  * Created by xin on 2015/1/26.
  */
 public class PoolHandler extends Thread implements Watcher, AsyncCallback.Children2Callback, AsyncCallback.StatCallback {
-    private static final Logger logger = LoggerFactory.getLogger(EmbedBroker.class);
-    private final static String zkconfigUrl = "conf/zkconfig.properties";
+    private static final Logger logger = LoggerFactory.getLogger(PoolHandler.class);
+
     private final static String DefaultZkconn = "127.0.0.1:2181";
     private final static String DefaultZnode = "/amq-clustering";
     private String zkconn;
@@ -29,7 +26,7 @@ public class PoolHandler extends Thread implements Watcher, AsyncCallback.Childr
     private PoolListener listener;
     private boolean dead = false;
 
-    public PoolHandler(String brokerName, String brokerUrl, PoolListener listener) throws Exception {
+    public PoolHandler(String conn, String node, String brokerName, String brokerUrl, PoolListener listener) throws Exception {
         this.listener = listener;
         if (brokerName == null || brokerUrl == null) {
             String error = "broker name and broker url cant be null!!" + brokerName + "||" + brokerUrl;
@@ -38,18 +35,8 @@ public class PoolHandler extends Thread implements Watcher, AsyncCallback.Childr
         }
         this.localName = brokerName;
         this.localUrl = brokerUrl;
-        try {
-            URL prop = Thread.currentThread().getContextClassLoader().getResource(zkconfigUrl);
-            Properties properties = new Properties();
-            properties.load(new FileInputStream(prop.getFile()));
-            String conn = properties.getProperty("zk.conn");
-            String node = properties.getProperty("zk.node");
-            this.zkconn = conn == null ? DefaultZkconn : conn;
-            this.znode = node == null ? DefaultZnode : node;
-        } catch (Exception e) {
-            logger.error(zkconfigUrl + " file load error!", e);
-            throw e;
-        }
+        this.zkconn = conn;
+        this.znode = node;
         zk = new ZooKeeper(zkconn, 3000, this);
         zk.exists(znode, true, this, znode);
         start();
@@ -68,11 +55,12 @@ public class PoolHandler extends Thread implements Watcher, AsyncCallback.Childr
                     wait();
                 }
                 if (dead) {
-                    new PoolHandler(localName, localUrl, listener);
+                    new PoolHandler(zkconn, znode, localName, localUrl, listener);
                     throw new Exception("connect dead! lost connect with zk!");
                 }
             }
         } catch (Exception e) {
+            System.out.println(e.getMessage());
             logger.error(e.getMessage());
         }
     }
@@ -93,6 +81,7 @@ public class PoolHandler extends Thread implements Watcher, AsyncCallback.Childr
                 case Expired:
                     // It's all over
                     dead = true;
+                    notifyAll();
                     break;
             }
         } else {

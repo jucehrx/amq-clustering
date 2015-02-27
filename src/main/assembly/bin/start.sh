@@ -31,27 +31,5 @@ else
 fi
 
 echo -e "Starting the activemq ...\c"
-nohup java $JAVA_OPTS $JAVA_MEM_OPTS $JAVA_DEBUG_OPTS $JAVA_JMX_OPTS -classpath $CONF_DIR:$LIB_JARS com.xin.projects.amq.clustering.Main > $STDOUT_FILE 2>&1 &
+java $JAVA_OPTS $JAVA_MEM_OPTS $JAVA_DEBUG_OPTS $JAVA_JMX_OPTS -classpath $CONF_DIR:$LIB_JARS com.xin.projects.amq.clustering.Main > $STDOUT_FILE
 
-COUNT=0
-while [ $COUNT -lt 1 ]; do
-    echo -e ".\c"
-    sleep 1
-    if [ -n "$SERVER_PORT" ]; then
-        if [ "$SERVER_PROTOCOL" == "dubbo" ]; then
-    	    COUNT=`echo status | nc -i 1 127.0.0.1 $SERVER_PORT | grep -c OK`
-        else
-            COUNT=`netstat -an | grep $SERVER_PORT | wc -l`
-        fi
-    else
-    	COUNT=`ps -f | grep java | grep "$DEPLOY_DIR" | awk '{print $2}' | wc -l`
-    fi
-    if [ $COUNT -gt 0 ]; then
-        break
-    fi
-done
-
-echo "OK!"
-PIDS=`ps -f | grep java | grep "$DEPLOY_DIR" | awk '{print $2}'`
-echo "PID: $PIDS"
-echo "STDOUT: $STDOUT_FILE"

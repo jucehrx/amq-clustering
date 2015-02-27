@@ -5,6 +5,11 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 import java.util.Properties;
 
 
@@ -13,7 +18,7 @@ import java.util.Properties;
  */
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
-    private final static String zkconfigUrl = "conf/zkconfig.properties";
+    private final static String zkconfigUrl = "zkconfig.properties";
 
     public static void main(String args[]) throws Exception {
         String zkconn;
@@ -23,9 +28,8 @@ public class Main {
         String category;
         try {
 //            URL prop = Thread.currentThread().getContextClassLoader().getResource(zkconfigUrl);
-            Properties properties = new Properties();
+            Properties properties = loadConfig(zkconfigUrl);
 //            properties.load(new FileInputStream(prop.getFile()));
-            properties.load(new FileInputStream(new File(zkconfigUrl)));
             zkconn = properties.getProperty("zk.conn");
             znode = properties.getProperty("zk.node");
             category = properties.getProperty("zk.category");
@@ -49,5 +53,27 @@ public class Main {
             }
         });
 
+    }
+
+    private static Properties loadConfig(String fileName) {
+        try {
+            URL url = Thread.currentThread().getContextClassLoader().getResource(fileName);
+            Properties p = new Properties();
+            InputStream input = url.openStream();
+            if (input != null) {
+                try {
+                    p.load(input);
+                } finally {
+                    try {
+                        input.close();
+                    } catch (Throwable t) {
+                    }
+                }
+            }
+            return p;
+        } catch (Exception e) {
+            logger.warn("Fail to load " + fileName + " file: " + e.getMessage(), e);
+        }
+        return null;
     }
 }

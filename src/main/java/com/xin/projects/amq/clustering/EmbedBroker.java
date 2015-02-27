@@ -19,7 +19,7 @@ import java.util.Map;
 /**
  * Created by xin on 2015/1/26.
  */
-public class EmbedBroker implements PoolHandler.PoolListener {
+public class EmbedBroker implements PoolHandler.PoolListener, BridgeListener.BridgeFailed {
     private static final Logger logger = LoggerFactory.getLogger(EmbedBroker.class);
     private BrokerService broker;
     private String localUrl = "tcp://localhost:61616";
@@ -35,7 +35,6 @@ public class EmbedBroker implements PoolHandler.PoolListener {
     public BrokerService createBroker() throws Exception {
         broker = new BrokerService();
         broker.setBrokerName(localName);
-        // String broker
         ManagementContext managementContext = broker.getManagementContext();
         managementContext.setFindTigerMbeanServer(true);
         managementContext.setUseMBeanServer(true);
@@ -64,7 +63,7 @@ public class EmbedBroker implements PoolHandler.PoolListener {
         try {
             HashMap<String, NetworkBridge> temp = new HashMap<String, NetworkBridge>();
             for (Map.Entry<String, String> entry : urls.entrySet()) {
-                if (entry.getKey().equals(localName) && entry.getValue().equals(localUrl)) {
+                if (entry.getValue().equals(localUrl)) {
                     continue;
                 }
                 if (bridges.get(entry.getKey()) != null) {
@@ -72,15 +71,16 @@ public class EmbedBroker implements PoolHandler.PoolListener {
                     bridges.remove(entry.getKey());
                 } else {
                     NetworkBridge bridge = createBridge(broker, localUrl, entry.getValue());
+                    bridge.setNetworkBridgeListener(new BridgeListener(entry.getKey(), entry.getValue(), this));
                     bridge.start();
-                    System.out.println("start: " + localUrl + "----" + entry.getValue());
-
+//                    System.out.println("start: " + localUrl + "----" + entry.getValue());
+//                    logger.info("start: " + localUrl + "----" + entry.getValue());
                     temp.put(entry.getKey(), bridge);
                 }
             }
             for (Map.Entry<String, NetworkBridge> entry : bridges.entrySet()) {
                 entry.getValue().stop();
-                System.out.println("stop: " + localUrl + "----" + entry.getValue());
+//                System.out.println("stop: " + localUrl + "----" + entry.getValue());
 
             }
             bridges = temp;
@@ -103,6 +103,8 @@ public class EmbedBroker implements PoolHandler.PoolListener {
         config.setBrokerName(broker.getBrokerName());
         config.setDispatchAsync(true);
         config.setDuplex(true);
+        config.setNetworkTTL(8);
+
 
         Transport localTransport = createTransport(localUrlurl);
         Transport remoteTransport = createTransport(remoteUrl);
@@ -111,6 +113,24 @@ public class EmbedBroker implements PoolHandler.PoolListener {
         bridge = NetworkBridgeFactory.createBridge(config, localTransport, remoteTransport);
         bridge.setBrokerService(broker);
         return bridge;
+    }
+
+    @Override
+    public void processFailed(String key, String url) {
+        if (bridges.get(key) != null) {
+            try {
+                System.out.println("Failed: local ---->" + url);
+                logger.info("Failed: local ---->" + url);
+                bridges.remove(key);
+                NetworkBridge bridge = createBridge(broker, localUrl, url);
+                bridge.setNetworkBridgeListener(new BridgeListener(key, url, this));
+                bridge.start();
+                bridges.put(key, bridge);
+            } catch (Exception e) {
+                logger.error("build bridge error!", e);
+                System.out.println("build bridge error!" + e.getMessage());
+            }
+        }
     }
 
     public BrokerService getBroker() {

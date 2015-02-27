@@ -6,9 +6,7 @@ import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 /**
@@ -19,15 +17,17 @@ public class PoolHandler extends Thread implements Watcher, AsyncCallback.Childr
     private static final Logger logger = LoggerFactory.getLogger(PoolHandler.class);
     private final static String DefaultZkconn = "127.0.0.1:2181";
     private final static String DefaultZnode = "/amq-clustering";
+    private final static String DefaultSortName = "broker";
     private String zkconn;
     private String znode;
     private String localName;
+    private String category;//在zk上实际加了序号的path
     private String localUrl;
     private ZooKeeper zk;
     private PoolListener listener;
     private boolean dead = false;
 
-    public PoolHandler(String conn, String node, String brokerName, String brokerUrl, PoolListener listener) throws Exception {
+    public PoolHandler(String conn, String node, String category, String brokerName, String brokerUrl, PoolListener listener) throws Exception {
         this.listener = listener;
         if (brokerName == null || brokerUrl == null) {
             String error = "broker name and broker url cant be null!!" + brokerName + "||" + brokerUrl;
@@ -38,6 +38,7 @@ public class PoolHandler extends Thread implements Watcher, AsyncCallback.Childr
         this.localUrl = brokerUrl;
         this.zkconn = conn;
         this.znode = node;
+        this.category = category;
 
         zk = new ZooKeeper(zkconn, 3000, this);
         zk.exists(znode, true, this, znode);
@@ -57,7 +58,7 @@ public class PoolHandler extends Thread implements Watcher, AsyncCallback.Childr
                     wait();
                 }
                 if (dead) {
-                    new PoolHandler(zkconn, znode, localName, localUrl, listener);
+                    new PoolHandler(zkconn, znode, category, localName, localUrl, listener);
                     throw new Exception("connect dead! lost connect with zk!");
                 }
             }
@@ -71,17 +72,10 @@ public class PoolHandler extends Thread implements Watcher, AsyncCallback.Childr
     public void process(WatchedEvent event) {
         String path = event.getPath();
         if (event.getType() == Event.EventType.None) {
-            // We are are being told that the state of the
-            // connection has changed
             switch (event.getState()) {
                 case SyncConnected:
-                    // In this particular example we don't need to do anything
-                    // here - watches are automatically re-registered with
-                    // server and any watches triggered while the client was
-                    // disconnected will be delivered (in order of course)
                     break;
                 case Expired:
-                    // It's all over
                     dead = true;
                     notifyAll();
                     break;
@@ -97,7 +91,6 @@ public class PoolHandler extends Thread implements Watcher, AsyncCallback.Childr
     @Override
     public void processResult(int rc, String path, Object ctx, List<String> children, Stat stat) {
         boolean exists;
-
         switch (rc) {
             case Code.Ok:
                 exists = true;
@@ -115,10 +108,15 @@ public class PoolHandler extends Thread implements Watcher, AsyncCallback.Childr
                 zk.getChildren(znode, true, this, null);
                 return;
         }
-
-
         if (exists && listener != null) {
-            listener.changes(getData(children));
+            if (children.size() > 0) {
+                String[] sortList = new String[children.size()];
+                children.toArray(sortList);
+                Arrays.sort(sortList);
+                if (category.endsWith(sortList[0])) {//当自己是序号最小的注册者时 自动成为master
+                    listener.changes(getData(children));
+                }
+            }
         } else {
 
         }
@@ -145,14 +143,11 @@ public class PoolHandler extends Thread implements Watcher, AsyncCallback.Childr
         }
         if (path.equals(znode)) {
             try {
-                if (exists) {
-                    zk.create(znode + "/" + localName, localUrl.getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL);
-                    zk.getChildren(znode, true, this, null);
-                } else {
+                if (!exists) {
                     zk.create(znode, null, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-                    zk.create(znode + "/" + localName, localUrl.getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL);
-                    zk.getChildren(znode, true, this, null);
                 }
+                category = zk.create(znode + "/" + category, localUrl.getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);
+                zk.getChildren(znode, true, this, null);
 
             } catch (Exception e) {
                 logger.error(e.getMessage());

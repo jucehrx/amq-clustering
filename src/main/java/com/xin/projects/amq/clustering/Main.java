@@ -20,6 +20,7 @@ public class Main {
         String znode;
         String localName;
         String localUrl;
+        String category;
         try {
 //            URL prop = Thread.currentThread().getContextClassLoader().getResource(zkconfigUrl);
             Properties properties = new Properties();
@@ -27,6 +28,7 @@ public class Main {
             properties.load(new FileInputStream(new File(zkconfigUrl)));
             zkconn = properties.getProperty("zk.conn");
             znode = properties.getProperty("zk.node");
+            category = properties.getProperty("zk.category");
             localName = properties.getProperty("amq.name");
             localUrl = properties.getProperty("amq.url");
         } catch (Exception e) {
@@ -40,7 +42,7 @@ public class Main {
         }
         EmbedBroker embedBroker = new EmbedBroker(localName, localUrl);
         embedBroker.setup();
-        new PoolHandler(zkconn, znode, localName, localUrl, embedBroker);
+        new PoolHandler(zkconn, znode, category, localName, localUrl, embedBroker);
 
     }
 }

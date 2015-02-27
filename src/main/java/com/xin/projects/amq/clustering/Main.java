@@ -40,9 +40,14 @@ public class Main {
             System.out.println(message);
             throw new Exception(message);
         }
-        EmbedBroker embedBroker = new EmbedBroker(localName, localUrl);
+        final EmbedBroker embedBroker = new EmbedBroker(localName, localUrl);
         embedBroker.setup();
         new PoolHandler(zkconn, znode, category, localName, localUrl, embedBroker);
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                embedBroker.stop();
+            }
+        });
 
     }
 }

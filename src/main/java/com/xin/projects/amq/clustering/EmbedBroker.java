@@ -141,5 +141,14 @@ public class EmbedBroker implements PoolHandler.PoolListener, BridgeListener.Bri
         this.broker = broker;
     }
 
+    public void stop() {
+        if (broker != null) {
+            try {
+                broker.stop();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
 }
